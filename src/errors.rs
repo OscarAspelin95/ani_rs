@@ -14,6 +14,6 @@ pub enum AppError {
     #[error("IO error: {0}")]
     IOError(#[from] std::io::Error),
 
-    #[error("Indicatif error: {0}")]
-    SomeError(#[from] indicatif::style::TemplateError),
+    #[error("Progress bar template error: {0}")]
+    ProgressBarError(#[from] indicatif::style::TemplateError),
 }

@@ -3,5 +3,5 @@ pub mod index;
 pub mod sketch;
 pub mod types;
 
-pub mod ultra_ani;
-pub use ultra_ani::*;
+pub mod pipeline;
+pub use pipeline::*;

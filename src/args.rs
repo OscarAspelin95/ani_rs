@@ -1,4 +1,4 @@
-use crate::ultra_ani::types::SketchType;
+use crate::engine::types::SketchType;
 use std::path::PathBuf;
 
 use clap::Parser;
@@ -22,4 +22,7 @@ pub struct Args {
 
     #[arg(short, long, help = "What kmer hash type to use", value_enum)]
     pub sketch_type: SketchType,
+
+    #[arg(short, long, help = "Number of top hits to report per query", default_value_t = 5)]
+    pub num_hits: usize,
 }

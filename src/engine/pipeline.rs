@@ -6,15 +6,10 @@ use super::{
 };
 use crate::io::fasta_reader;
 use crate::{args::Args, errors::AppError};
-use bio::io::fasta::Reader;
-use std::{
-    fs::File,
-    io::{BufReader, BufWriter},
-    sync::{Arc, Mutex},
-};
+use std::{fs::File, io::BufWriter};
 
 pub fn get_sketcher(args: &Args) -> Box<dyn Sketcher> {
-    let sketcher: Box<dyn Sketcher> = match args.sketch_type {
+    match args.sketch_type {
         SketchType::Minimizer => Box::new(MinimizerSketch {
             kmer_size: args.kmer_size,
             window_size: args.window_size,
@@ -27,32 +22,27 @@ pub fn get_sketcher(args: &Args) -> Box<dyn Sketcher> {
             kmer_size: args.kmer_size,
             window_size: args.window_size,
         }),
-    };
-
-    sketcher
-    // sketcher
+    }
 }
 
 pub fn run(args: Args) -> Result<(), AppError> {
     let sketcher = get_sketcher(&args);
 
-    //
-    let database_reader: Reader<BufReader<File>> = fasta_reader(&args.database)?;
-    let query_reader: Reader<BufReader<File>> = fasta_reader(&args.query)?;
+    let database_reader = fasta_reader(&args.database)?;
+    let query_reader = fasta_reader(&args.query)?;
 
-    //
-    let (reverse_index, valid_records) = build_reverse_index(database_reader, &sketcher);
+    let (reverse_index, valid_records) = build_reverse_index(database_reader, &*sketcher)?;
 
-    //
-    let writer = Arc::new(Mutex::new(BufWriter::new(File::create(&args.outfile)?)));
+    let mut writer = BufWriter::new(File::create(&args.outfile)?);
 
-    let _ = classify(
+    classify(
         &reverse_index,
-        &valid_records[..],
+        &valid_records,
         query_reader,
-        writer,
-        sketcher,
-    );
+        &mut writer,
+        &*sketcher,
+        args.num_hits,
+    )?;
 
     Ok(())
 }

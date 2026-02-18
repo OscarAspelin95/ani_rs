@@ -1,10 +1,9 @@
-use crate::ultra_ani::sketch::Sketcher;
+use crate::engine::sketch::Sketcher;
+use crate::errors::AppError;
 use bio::io::fasta::{Reader, Record};
-
 use dashmap::DashMap;
 use fixedbitset::FixedBitSet;
 use indicatif::{ProgressBar, ProgressStyle};
-use log::*;
 use rayon::prelude::*;
 use rustc_hash::FxBuildHasher;
 use std::fs::File;
@@ -13,28 +12,24 @@ use std::time::Duration;
 
 pub fn build_reverse_index(
     database_reader: Reader<BufReader<File>>,
-    sketcher: &Box<dyn Sketcher>,
-) -> (DashMap<u64, FixedBitSet, FxBuildHasher>, Vec<Record>) {
-    info!("Loading sequences...");
+    sketcher: &dyn Sketcher,
+) -> Result<(DashMap<u64, FixedBitSet, FxBuildHasher>, Vec<Record>), AppError> {
     let valid_records: Vec<Record> = database_reader
         .records()
         .filter_map(|record| record.ok())
         .collect();
 
     let num_records = valid_records.len();
-
     let map = DashMap::with_capacity_and_hasher(num_records, FxBuildHasher);
 
-    // For now, just use normal iterator
-    info!("Creating index...");
     let spinner = ProgressBar::new_spinner();
     spinner.enable_steady_tick(Duration::from_millis(200));
-    spinner.set_style(ProgressStyle::with_template("{spinner:.blue} [{elapsed_precise}]").unwrap());
+    spinner.set_style(ProgressStyle::with_template("{spinner:.blue} [{elapsed_precise}]")?);
 
     valid_records.par_iter().enumerate().for_each(|(i, r)| {
         let hashes = sketcher.sketch(r.seq());
 
-        hashes.iter().for_each(|h| {
+        for h in &hashes {
             map.entry(*h)
                 .and_modify(|bitset: &mut FixedBitSet| bitset.set(i, true))
                 .or_insert_with(|| {
@@ -42,10 +37,10 @@ pub fn build_reverse_index(
                     bitset.set(i, true);
                     bitset
                 });
-        });
+        }
     });
 
     spinner.finish();
 
-    (map, valid_records)
+    Ok((map, valid_records))
 }

@@ -1,11 +1,11 @@
 mod args;
 mod errors;
 mod io;
-mod ultra_ani;
+mod engine;
 
 use args::Args;
 use clap::Parser;
-use ultra_ani::run;
+use engine::run;
 
 use crate::errors::AppError;
 
