@@ -3,12 +3,10 @@ use bio::io::fasta::{Reader, Record};
 use bio_utils_rs::simd_sketch::Sketcher;
 use dashmap::DashMap;
 use fixedbitset::FixedBitSet;
-use indicatif::{ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 use rustc_hash::FxBuildHasher;
 use std::collections::HashSet;
 use std::io::Write;
-use std::time::Duration;
 use std::{
     fs::File,
     io::{BufReader, BufWriter},
@@ -34,12 +32,6 @@ pub fn classify(
     num_hits: usize,
     min_score: f64,
 ) -> Result<(), AppError> {
-    let spinner: ProgressBar = ProgressBar::new_spinner();
-    spinner.enable_steady_tick(Duration::from_millis(200));
-    spinner.set_style(ProgressStyle::with_template(
-        "Classifying query sequences {spinner:.blue} [{elapsed_precise}]",
-    )?);
-
     // Pre-collect query records so we can use par_iter (more efficient than par_bridge)
     let query_records: Vec<Record> = query_reader.records().filter_map(|r| r.ok()).collect();
 
@@ -98,8 +90,6 @@ pub fn classify(
             })
         })
         .collect();
-
-    spinner.finish();
 
     // Write TSV header
     writeln!(writer, "query_id\tsubject_id\tshared_hashes\tscore")?;
