@@ -32,6 +32,7 @@ pub fn classify(
     writer: &mut BufWriter<File>,
     sketcher: &dyn Sketcher,
     num_hits: usize,
+    min_score: f64,
 ) -> Result<(), AppError> {
     let spinner: ProgressBar = ProgressBar::new_spinner();
     spinner.enable_steady_tick(Duration::from_millis(200));
@@ -63,11 +64,13 @@ pub fn classify(
                 }
             }
 
-            // Extract top N hits, filtering zeros
+            // Extract top N hits, filtering zeros and scores below min allowed score.
             let mut scored: Vec<(usize, usize)> = hits
                 .into_iter()
                 .enumerate()
-                .filter(|(_, count)| *count > 0)
+                .filter(|(_, count)| {
+                    *count > 0 && *count as f64 / num_query_hashes as f64 >= min_score
+                })
                 .map(|(idx, count)| (count, idx))
                 .collect();
 
@@ -78,7 +81,7 @@ pub fn classify(
             let n = num_hits.min(scored.len());
             scored.select_nth_unstable_by(n - 1, |a, b| b.0.cmp(&a.0));
             scored.truncate(n);
-            scored.sort_unstable_by(|a, b| b.0.cmp(&a.0));
+            scored.sort_unstable_by(|(count_a, _), (count_b, _)| count_b.cmp(count_a));
 
             let hit_results: Vec<HitResult> = scored
                 .into_iter()
@@ -101,7 +104,7 @@ pub fn classify(
     // Write TSV header
     writeln!(writer, "query_id\tsubject_id\tshared_hashes\tscore")?;
 
-    // Write all results sequentially (no mutex contention)
+    // Write all results sequentially to avoid mutex contention
     for result in &results {
         for hit in &result.hits {
             writeln!(

@@ -30,4 +30,12 @@ pub struct Args {
         default_value_t = 5
     )]
     pub num_hits: usize,
+
+    #[arg(
+        short,
+        long,
+        help = "Minimum fraction of shared hashes to consider hit valid.",
+        default_value_t = 0.80
+    )]
+    pub min_score: f64,
 }

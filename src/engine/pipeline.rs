@@ -54,6 +54,7 @@ pub fn run(args: Args) -> Result<(), AppError> {
         &mut writer,
         &*sketcher,
         args.num_hits,
+        args.min_score,
     )?;
 
     Ok(())
