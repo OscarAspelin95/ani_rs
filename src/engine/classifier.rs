@@ -1,6 +1,6 @@
-use crate::engine::sketch::Sketcher;
 use crate::errors::AppError;
 use bio::io::fasta::{Reader, Record};
+use bio_utils_rs::simd_sketch::Sketcher;
 use dashmap::DashMap;
 use fixedbitset::FixedBitSet;
 use indicatif::{ProgressBar, ProgressStyle};
@@ -40,10 +40,7 @@ pub fn classify(
     )?);
 
     // Pre-collect query records so we can use par_iter (more efficient than par_bridge)
-    let query_records: Vec<Record> = query_reader
-        .records()
-        .filter_map(|r| r.ok())
-        .collect();
+    let query_records: Vec<Record> = query_reader.records().filter_map(|r| r.ok()).collect();
 
     // Process queries in parallel, collect results (no mutex needed)
     let results: Vec<QueryResult> = query_records
