@@ -37,7 +37,7 @@ pub fn classify(
     let spinner: ProgressBar = ProgressBar::new_spinner();
     spinner.enable_steady_tick(Duration::from_millis(200));
     spinner.set_style(ProgressStyle::with_template(
-        "{spinner:.blue} [{elapsed_precise}]",
+        "Classifying query sequences {spinner:.blue} [{elapsed_precise}]",
     )?);
 
     // Pre-collect query records so we can use par_iter (more efficient than par_bridge)

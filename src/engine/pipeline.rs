@@ -37,7 +37,7 @@ pub fn run(args: Args) -> Result<(), AppError> {
     let spinner = ProgressBar::new_spinner();
     spinner.enable_steady_tick(Duration::from_millis(200));
     spinner.set_style(ProgressStyle::with_template(
-        "{spinner:.blue} [{elapsed_precise}]",
+        "Loading database and building reverse index {spinner:.blue} [{elapsed_precise}]",
     )?);
 
     let seqs: Vec<&[u8]> = valid_records.iter().map(|r| r.seq()).collect();
