@@ -24,6 +24,8 @@ Optional arguments:
 <b>--kmer-size</b> [15] - Kmer size for hashing.
 <b>--window-size</b> [7] - Window size. Larger values = fewer hashes => faster but less sensitive.
 <b>--num-hits</b> [5] - Number of top database hits to report per query. Hits with zero score are excluded.
+<b>--min-score</b> [0.80] - Minimum fraction of shared hashes to consider a hit valid. 
+
 </pre>
 
 ## Output
