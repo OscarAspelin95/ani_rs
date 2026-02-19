@@ -32,21 +32,25 @@ pub fn run(args: Args) -> Result<(), AppError> {
     let database_reader = fasta_reader(&args.database)?;
     let query_reader = fasta_reader(&args.query)?;
 
-    let valid_records: Vec<Record> = database_reader.records().filter_map(|r| r.ok()).collect();
-
     let spinner = ProgressBar::new_spinner();
     spinner.enable_steady_tick(Duration::from_millis(200));
     spinner.set_style(ProgressStyle::with_template(
         "Loading database and building reverse index {spinner:.blue} [{elapsed_precise}]",
     )?);
 
+    let valid_records: Vec<Record> = database_reader.records().filter_map(|r| r.ok()).collect();
     let seqs: Vec<&[u8]> = valid_records.iter().map(|r| r.seq()).collect();
     let reverse_index = build_reverse_index(&seqs, &*sketcher);
 
-    spinner.finish();
+    spinner.finish_and_clear();
 
     let mut writer = BufWriter::new(File::create(&args.outfile)?);
 
+    let spinner = ProgressBar::new_spinner();
+    spinner.enable_steady_tick(Duration::from_millis(200));
+    spinner.set_style(ProgressStyle::with_template(
+        "Classifying query sequences {spinner:.blue} [{elapsed_precise}]",
+    )?);
     classify(
         &reverse_index,
         &valid_records,
@@ -56,6 +60,8 @@ pub fn run(args: Args) -> Result<(), AppError> {
         args.num_hits,
         args.min_score,
     )?;
+
+    spinner.finish();
 
     Ok(())
 }
